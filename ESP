@@ -373,7 +373,6 @@ function boxBase:Update()
                         local equippedTool = character:FindFirstChildOfClass("Tool")
                         if equippedTool then
                             equippedToolName = equippedTool.Name
-                            table.insert(inventory, equippedTool.Name)
                         end
                     end
 
@@ -381,6 +380,10 @@ function boxBase:Update()
                         if item:IsA("Tool") then
                             table.insert(inventory, item.Name)
                         end
+                    end
+
+                    if equippedToolName then
+                        table.insert(inventory, 1, equippedToolName)
                     end
 
                     if #inventory > 0 then
@@ -395,7 +398,7 @@ function boxBase:Update()
                                 textObj.Position = Vector2.new(startX, startY + ((i - 1) * lineHeight))
                                 textObj.Text = inventory[i]
                                 
-                                if equippedToolName and inventory[i] == equippedToolName then
+                                if i == 1 and equippedToolName then
                                     textObj.Color = Color3.fromRGB(255, 100, 100)
                                 else
                                     textObj.Color = ESP.InventoryColor
