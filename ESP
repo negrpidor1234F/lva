@@ -221,63 +221,51 @@ function boxBase:Update()
                         self.Components.Quad.PointC = Vector2.new(BottomLeft.X, BottomLeft.Y)
                         self.Components.Quad.PointD = Vector2.new(BottomRight.X, BottomRight.Y)
                         self.Components.Quad.Color = color
+                        
+                        if ESP.HealthBar and self.Player and self.Player.Character and self.Player.Character:FindFirstChild("Humanoid") then
+                            local humanoid = self.Player.Character.Humanoid
+                            local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+                            
+                            local barWidth = 3
+                            local barOffset = 6
+                            
+                            local barX = TopLeft.X - barOffset
+                            local barTopY = TopLeft.Y
+                            local barBottomY = BottomLeft.Y
+                            local barHeight = math.abs(barBottomY - barTopY)
+                            
+                            local healthColor = Color3.fromRGB(
+                                math.floor(255 * (1 - healthPercent)),
+                                math.floor(255 * healthPercent),
+                                0
+                            )
+                            
+                            self.Components.HealthBarOutline.Visible = true
+                            self.Components.HealthBarOutline.From = Vector2.new(barX, barTopY)
+                            self.Components.HealthBarOutline.To = Vector2.new(barX, barBottomY)
+                            self.Components.HealthBarOutline.Color = Color3.fromRGB(0, 0, 0)
+                            self.Components.HealthBarOutline.Thickness = barWidth + 2
+                            
+                            local healthBarTop = barTopY + (barHeight * (1 - healthPercent))
+                            self.Components.HealthBarFill.Visible = true
+                            self.Components.HealthBarFill.From = Vector2.new(barX, healthBarTop)
+                            self.Components.HealthBarFill.To = Vector2.new(barX, barBottomY)
+                            self.Components.HealthBarFill.Color = healthColor
+                            self.Components.HealthBarFill.Thickness = barWidth
+                        else
+                            self.Components.HealthBarOutline.Visible = false
+                            self.Components.HealthBarFill.Visible = false
+                        end
                     else
                         self.Components.Quad.Visible = false
+                        self.Components.HealthBarOutline.Visible = false
+                        self.Components.HealthBarFill.Visible = false
                     end
                 end
             else
                 self.Components.Quad.Visible = false
-            end
-
-            if ESP.HealthBar and self.Player then
-                local TopLeft, Vis1 = WorldToViewportPoint(cam, locs.TopLeft.p)
-                local BottomLeft, Vis3 = WorldToViewportPoint(cam, locs.BottomLeft.p)
-
-                if (Vis1 or Vis3) and self.Player.Character and self.Player.Character:FindFirstChild("Humanoid") then
-                    local humanoid = self.Player.Character.Humanoid
-                    local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
-                    
-                    local barWidth = 3
-                    local barHeight = math.abs(BottomLeft.Y - TopLeft.Y)
-                    local barOffset = 8
-                    
-                    local barX = TopLeft.X - barOffset
-                    local barTopY = TopLeft.Y
-                    local barBottomY = BottomLeft.Y
-                    
-                    local healthColor = Color3.fromRGB(
-                        math.floor(255 * (1 - healthPercent)),
-                        math.floor(255 * healthPercent),
-                        0
-                    )
-                    
-                    self.Components.HealthBarOutline.Visible = true
-                    self.Components.HealthBarOutline.From = Vector2.new(barX, barTopY)
-                    self.Components.HealthBarOutline.To = Vector2.new(barX, barBottomY)
-                    self.Components.HealthBarOutline.Color = Color3.fromRGB(255, 255, 255)
-                    self.Components.HealthBarOutline.Thickness = barWidth + 4
-                    
-                    self.Components.HealthBarBackground.Visible = true
-                    self.Components.HealthBarBackground.From = Vector2.new(barX, barTopY)
-                    self.Components.HealthBarBackground.To = Vector2.new(barX, barBottomY)
-                    self.Components.HealthBarBackground.Color = Color3.fromRGB(0, 0, 0)
-                    self.Components.HealthBarBackground.Thickness = barWidth + 2
-                    
-                    local healthBarTop = barTopY + (barHeight * (1 - healthPercent))
-                    self.Components.HealthBarFill.Visible = true
-                    self.Components.HealthBarFill.From = Vector2.new(barX, healthBarTop)
-                    self.Components.HealthBarFill.To = Vector2.new(barX, barBottomY)
-                    self.Components.HealthBarFill.Color = healthColor
-                    self.Components.HealthBarFill.Thickness = barWidth
-                else
-                    self.Components.HealthBarBackground.Visible = false
-                    self.Components.HealthBarFill.Visible = false
-                    self.Components.HealthBarOutline.Visible = false
-                end
-            else
-                self.Components.HealthBarBackground.Visible = false
-                self.Components.HealthBarFill.Visible = false
                 self.Components.HealthBarOutline.Visible = false
+                self.Components.HealthBarFill.Visible = false
             end
 
             if ESP.Distance then
@@ -385,9 +373,8 @@ function boxBase:Update()
             self.Components.Tool.Visible = false
             self.Components.Name.Visible = false
             self.Components.Tracer.Visible = false
-            self.Components.HealthBarBackground.Visible = false
-            self.Components.HealthBarFill.Visible = false
             self.Components.HealthBarOutline.Visible = false
+            self.Components.HealthBarFill.Visible = false
         end
 end
 
@@ -467,12 +454,6 @@ function ESP:Add(obj, options)
 		Visible = self.Enabled and self.Tracers
 	})
 	box.Components["HealthBarOutline"] = Draw("Line", {
-		Thickness = 7,
-		Color = Color3.fromRGB(255, 255, 255),
-		Transparency = 1,
-		Visible = self.Enabled and self.HealthBar
-	})
-	box.Components["HealthBarBackground"] = Draw("Line", {
 		Thickness = 5,
 		Color = Color3.fromRGB(0, 0, 0),
 		Transparency = 1,
