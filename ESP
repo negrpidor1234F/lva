@@ -367,17 +367,19 @@ function boxBase:Update()
                     local inventory = {}
                     local backpack = self.Player.Backpack
                     local character = self.Player.Character
-
-                    for _, item in pairs(backpack:GetChildren()) do
-                        if item:IsA("Tool") then
-                            table.insert(inventory, item.Name)
-                        end
-                    end
+                    local equippedToolName = nil
 
                     if character then
                         local equippedTool = character:FindFirstChildOfClass("Tool")
                         if equippedTool then
-                            table.insert(inventory, 1, "[" .. equippedTool.Name .. "]")
+                            equippedToolName = equippedTool.Name
+                            table.insert(inventory, equippedTool.Name)
+                        end
+                    end
+
+                    for _, item in pairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            table.insert(inventory, item.Name)
                         end
                     end
 
@@ -392,7 +394,13 @@ function boxBase:Update()
                                 textObj.Visible = true
                                 textObj.Position = Vector2.new(startX, startY + ((i - 1) * lineHeight))
                                 textObj.Text = inventory[i]
-                                textObj.Color = ESP.InventoryColor
+                                
+                                if equippedToolName and inventory[i] == equippedToolName then
+                                    textObj.Color = Color3.fromRGB(255, 100, 100)
+                                else
+                                    textObj.Color = ESP.InventoryColor
+                                end
+                                
                                 textObj.Size = ESP.Size
                             end
                         end
