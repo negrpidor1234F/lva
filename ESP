@@ -11,6 +11,7 @@ local ESP = {
 	Distance = false,
 	Health = false,
     Tool = false,
+	Inventory = false,
 	TeamColor = true,
 	Thickness = 1.5,
 	AttachShift = 1,
@@ -20,6 +21,7 @@ local ESP = {
 	HealthCustom = "None",
 	Size = 15,
 	HealthBar = false,
+	InventoryColor = Color3.fromRGB(255, 255, 255),
 
 	Objects = setmetatable({}, {__mode="kv"}),
 	Overrides = {}
@@ -229,7 +231,6 @@ function boxBase:Update()
                 self.Components.Quad.Visible = false
             end
 
-            -- HealthBar логика (слева от бокса)
             if ESP.HealthBar and self.Player then
                 local TopLeft, Vis1 = WorldToViewportPoint(cam, locs.TopLeft.p)
                 local BottomLeft, Vis3 = WorldToViewportPoint(cam, locs.BottomLeft.p)
@@ -238,38 +239,32 @@ function boxBase:Update()
                     local humanoid = self.Player.Character.Humanoid
                     local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
                     
-                    -- Размеры healthbar
                     local barWidth = 3
                     local barHeight = math.abs(BottomLeft.Y - TopLeft.Y)
-                    local barOffset = 8  -- отступ от бокса влево
+                    local barOffset = 8
                     
-                    -- Позиции (слева от левой границы бокса)
                     local barX = TopLeft.X - barOffset
                     local barTopY = TopLeft.Y
                     local barBottomY = BottomLeft.Y
                     
-                    -- Цвет в зависимости от здоровья (от красного к зеленому)
                     local healthColor = Color3.fromRGB(
                         math.floor(255 * (1 - healthPercent)),
                         math.floor(255 * healthPercent),
                         0
                     )
                     
-                    -- Обводка healthbar (белая) - рисуем первой как background
                     self.Components.HealthBarOutline.Visible = true
                     self.Components.HealthBarOutline.From = Vector2.new(barX, barTopY)
                     self.Components.HealthBarOutline.To = Vector2.new(barX, barBottomY)
                     self.Components.HealthBarOutline.Color = Color3.fromRGB(255, 255, 255)
                     self.Components.HealthBarOutline.Thickness = barWidth + 4
                     
-                    -- Фон healthbar (черный)
                     self.Components.HealthBarBackground.Visible = true
                     self.Components.HealthBarBackground.From = Vector2.new(barX, barTopY)
                     self.Components.HealthBarBackground.To = Vector2.new(barX, barBottomY)
                     self.Components.HealthBarBackground.Color = Color3.fromRGB(0, 0, 0)
                     self.Components.HealthBarBackground.Thickness = barWidth + 2
                     
-                    -- Заполнение healthbar (сверху вниз в зависимости от здоровья)
                     local healthBarTop = barTopY + (barHeight * (1 - healthPercent))
                     self.Components.HealthBarFill.Visible = true
                     self.Components.HealthBarFill.From = Vector2.new(barX, healthBarTop)
@@ -312,7 +307,6 @@ function boxBase:Update()
                             self.Components.Health.Position = Vector2.new(TagPos.X, TagPos.Y + 14)
                             local currentHealth = math.floor(self.Player.Character.Humanoid.Health + 0.5)
                             
-                            -- Цвет текста в зависимости от здоровья
                             local healthPercent = self.Player.Character.Humanoid.Health / self.Player.Character.Humanoid.MaxHealth
                             local healthColor = Color3.fromRGB(
                                 math.floor(255 * (1 - healthPercent)),
@@ -364,6 +358,75 @@ function boxBase:Update()
             else
                 self.Components.Tool.Visible = false
             end
+
+            if self.Player and ESP.Inventory then
+                local TopRight, Vis2 = WorldToViewportPoint(cam, locs.TopRight.p)
+                local BottomRight, Vis4 = WorldToViewportPoint(cam, locs.BottomRight.p)
+
+                if Vis2 or Vis4 then
+                    local inventory = {}
+                    local backpack = self.Player.Backpack
+                    local character = self.Player.Character
+
+                    for _, item in pairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            table.insert(inventory, item.Name)
+                        end
+                    end
+
+                    if character then
+                        local equippedTool = character:FindFirstChildOfClass("Tool")
+                        if equippedTool then
+                            table.insert(inventory, 1, "[" .. equippedTool.Name .. "]")
+                        end
+                    end
+
+                    if #inventory > 0 then
+                        local startX = TopRight.X + 5
+                        local startY = TopRight.Y
+                        local lineHeight = ESP.Size + 2
+
+                        for i = 1, math.min(#inventory, 6) do
+                            local textObj = self.Components["Inventory" .. i]
+                            if textObj then
+                                textObj.Visible = true
+                                textObj.Position = Vector2.new(startX, startY + ((i - 1) * lineHeight))
+                                textObj.Text = inventory[i]
+                                textObj.Color = ESP.InventoryColor
+                                textObj.Size = ESP.Size
+                            end
+                        end
+
+                        for i = #inventory + 1, 6 do
+                            local textObj = self.Components["Inventory" .. i]
+                            if textObj then
+                                textObj.Visible = false
+                            end
+                        end
+                    else
+                        for i = 1, 6 do
+                            local textObj = self.Components["Inventory" .. i]
+                            if textObj then
+                                textObj.Visible = false
+                            end
+                        end
+                    end
+                else
+                    for i = 1, 6 do
+                        local textObj = self.Components["Inventory" .. i]
+                        if textObj then
+                            textObj.Visible = false
+                        end
+                    end
+                end
+            else
+                for i = 1, 6 do
+                    local textObj = self.Components["Inventory" .. i]
+                    if textObj then
+                        textObj.Visible = false
+                    end
+                end
+            end
             
             if ESP.Names then
                 local TagPos, Vis5 = WorldToViewportPoint(cam, locs.TagPos.p)
@@ -405,6 +468,12 @@ function boxBase:Update()
             self.Components.HealthBarBackground.Visible = false
             self.Components.HealthBarFill.Visible = false
             self.Components.HealthBarOutline.Visible = false
+            for i = 1, 6 do
+                local textObj = self.Components["Inventory" .. i]
+                if textObj then
+                    textObj.Visible = false
+                end
+            end
         end
 end
 
@@ -501,6 +570,15 @@ function ESP:Add(obj, options)
 		Transparency = 1,
 		Visible = self.Enabled and self.HealthBar
 	})
+	for i = 1, 6 do
+		box.Components["Inventory" .. i] = Draw("Text", {
+			Color = ESP.InventoryColor,
+			Center = false,
+			Outline = true,
+			Size = 15,
+			Visible = self.Enabled and self.Inventory
+		})
+	end
 	self.Objects[obj] = box
 
 	obj.AncestryChanged:Connect(function(_, parent)
