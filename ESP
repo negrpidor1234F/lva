@@ -340,23 +340,29 @@ function boxBase:Update()
                     local TagPos, Vis5 = WorldToViewportPoint(cam, locs.TagPos.p)
 
                     if Vis5 then
-                        self.Components.Tool.Visible = true
-                        self.Components.Tool.Position = Vector2.new(TagPos.X, TagPos.Y - 14)
                         if self.Player.Character:FindFirstChildOfClass("Tool") then
-                            self.Components.Tool.Text = self.Player.Character:FindFirstChildOfClass("Tool").Name
+                            self.Components.Tool.Visible = true
+                            self.Components.Tool.Position = Vector2.new(TagPos.X, TagPos.Y - 14)
+                            local equippedTool = self.Player.Character:FindFirstChildOfClass("Tool")
+                            self.Components.Tool.Text = equippedTool.Name
                             self.Components.Tool.Color = ESP.ToolColor
-							self.Components.Tool.Size = ESP.Size
+                            self.Components.Tool.Size = ESP.Size
+                            self.EquippedToolName = equippedTool.Name
                         else
                             self.Components.Tool.Visible = false
+                            self.EquippedToolName = nil
                         end
                     else
                         self.Components.Tool.Visible = false
+                        self.EquippedToolName = nil
                     end
                 else
                     self.Components.Tool.Visible = false
+                    self.EquippedToolName = nil
                 end
             else
                 self.Components.Tool.Visible = false
+                self.EquippedToolName = nil
             end
 
             if self.Player and ESP.Inventory then
@@ -366,15 +372,6 @@ function boxBase:Update()
                 if Vis2 or Vis4 then
                     local inventory = {}
                     local backpack = self.Player.Backpack
-                    local character = self.Player.Character
-                    local equippedToolName = nil
-
-                    if character then
-                        local equippedTool = character:FindFirstChildOfClass("Tool")
-                        if equippedTool then
-                            equippedToolName = equippedTool.Name
-                        end
-                    end
 
                     for _, item in pairs(backpack:GetChildren()) do
                         if item:IsA("Tool") then
@@ -382,8 +379,11 @@ function boxBase:Update()
                         end
                     end
 
-                    if equippedToolName then
-                        table.insert(inventory, 1, equippedToolName)
+                    if self.Player.Character then
+                        local equippedTool = self.Player.Character:FindFirstChildOfClass("Tool")
+                        if equippedTool then
+                            table.insert(inventory, 1, equippedTool.Name)
+                        end
                     end
 
                     if #inventory > 0 then
@@ -398,7 +398,7 @@ function boxBase:Update()
                                 textObj.Position = Vector2.new(startX, startY + ((i - 1) * lineHeight))
                                 textObj.Text = inventory[i]
                                 
-                                if i == 1 and equippedToolName then
+                                if self.EquippedToolName and inventory[i] == self.EquippedToolName then
                                     textObj.Color = Color3.fromRGB(255, 100, 100)
                                 else
                                     textObj.Color = ESP.InventoryColor
