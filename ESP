@@ -19,7 +19,7 @@ local ESP = {
     DistanceS = 2000,
 	HealthCustom = "None",
 	Size = 15,
-	HealthBar = false,  -- Новая опция для healthbar
+	HealthBar = false,
 
 	Objects = setmetatable({}, {__mode="kv"}),
 	Overrides = {}
